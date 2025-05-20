@@ -1,5 +1,8 @@
 from deminer.controller.user_controller import UserController
-# from ayva_project.controller.films_controller import FilmsController
-
 user_controller = UserController()
-# films_controller = FilmsController()
+
+from deminer.controller.commands_controller import CommandsController
+commands_controller = CommandsController()
+
+from deminer.controller.session_controller import SessionController
+session_controller = SessionController()

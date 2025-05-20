@@ -2,8 +2,12 @@ from flask import Blueprint, Response, jsonify, make_response, request
 
 from http import HTTPStatus
 
+import jwt
+
 from deminer.controller import user_controller
 from deminer.model import User
+from deminer import SECRET_KEY_JWT, token_required
+
 # from project.schemas.user_schema import RegistrationSchema, UserResponseSchema, UserPatchSchema, LoginSchema
 
 
@@ -28,7 +32,11 @@ def login():
     user: User = User.query.filter_by(email=email).first()
 
     if user and user.check_password(password):
-        return make_response("Login successful", HTTPStatus.OK)
+        token = jwt.encode({
+                'user': user.name,
+                'email': user.email,
+            }, SECRET_KEY_JWT, algorithm="HS256"),
+        return jsonify({'token': token})
     else:
         return make_response("Invalid credentials", HTTPStatus.UNAUTHORIZED)
 
