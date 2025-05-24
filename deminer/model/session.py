@@ -10,3 +10,11 @@ class Session(db.Model, IDto):
 
 
     commands = db.relationship('Commands', back_populates='session')
+
+    def put_into_dto(self):
+        return {
+            "id": self.id,
+            "date": self.date,
+        
+            "commands": list(map(lambda a: a.put_into_dto(), self.commands)),
+            }
