@@ -7,6 +7,7 @@ class Session(db.Model, IDto):
 
     id: int = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date: datetime = db.Column(db.DateTime, nullable=False)
+    name: str = db.Column(db.String(45), nullable=False)
 
 
     commands = db.relationship('Commands', back_populates='session')
@@ -15,6 +16,7 @@ class Session(db.Model, IDto):
         return {
             "id": self.id,
             "date": self.date,
+            "name": self.name,
         
             "commands": list(map(lambda a: a.put_into_dto(), self.commands)),
             }
