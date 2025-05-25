@@ -27,9 +27,7 @@ def getById() -> Response:
     data = request.get_json()
     id = data['id']
     findSession: Session = Session.query.filter_by(id=id).first()
-    print(id)
     print(findSession)
-
 
     if findSession:
         return findSession.put_into_dto(), 201
@@ -42,11 +40,14 @@ def registration() -> Response:
     content = request.get_json()
 
     dateNow = datetime.now()
-    newSession = Session(
-        date=dateNow
-    )
     commands = content['commands']
-    print(commands)
+    nameSession = content['nameSession']
+    
+    newSession = Session(
+        date=dateNow,
+        name=nameSession
+    )
+   
     for cmd in commands:
         command = Commands(
         index=cmd['index'],
@@ -67,8 +68,6 @@ def registration() -> Response:
 @sessions_bp.put('/<int:id>')
 def update_session(id: int) -> Response:
     content = request.get_json()
-
-    print(content)
     session = content['session']
     session_controller.update(id, session)
     return make_response("Session updated", HTTPStatus.OK)
