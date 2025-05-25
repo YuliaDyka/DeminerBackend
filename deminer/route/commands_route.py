@@ -9,9 +9,6 @@ from http import HTTPStatus
 from deminer.controller import commands_controller
 from deminer.model.commands import Commands
 
-
-
-
 commands_bp = Blueprint('commands', __name__, url_prefix='/commands')
 
 @commands_bp.get('')
@@ -26,21 +23,23 @@ def get_all_commands() -> Response:
 @commands_bp.post('/create')
 def registration() -> Response:
     content = request.get_json()
-    
-    commands = Commands(**content)
-    commands_controller.create(commands)
-    return make_response("Successfull created", HTTPStatus.CREATED)
+    newCommands = Commands(**content['command'])
+
+    print(newCommands)
+    commands_controller.create(newCommands)
+    return make_response("Successful created", HTTPStatus.CREATED)
 
 #-------------------------- UPDATE --------------------------------
 @commands_bp.put('/<int:id>')
 def update_commands(id: int) -> Response:
     content = request.get_json()
-    commands = Commands(**content)
+    commands = Commands(**content['command'])
+    print(commands)
     commands_controller.update(id, commands)
-    return make_response("commands updated", HTTPStatus.OK)
+    return make_response("Commands updated", HTTPStatus.OK)
 
 #-------------------------- DELETE --------------------------------
 @commands_bp.delete('/<int:id>')
 def delete_commands(id: int) -> Response:
     commands_controller.delete(id)
-    return make_response("commands deleted", HTTPStatus.OK)
+    return make_response("Commands deleted", HTTPStatus.OK)

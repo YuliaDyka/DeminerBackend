@@ -21,17 +21,32 @@ def get_all_sessions() -> Response:
     """
     return make_response(jsonify(session_controller.find_all()), HTTPStatus.OK)
 
+#-------------------------- GET BY ID --------------------------------
+@sessions_bp.post('/getById')
+def getById() -> Response:
+    data = request.get_json()
+    id = data['id']
+    findSession: Session = Session.query.filter_by(id=id).first()
+    print(id)
+    print(findSession)
+
+
+    if findSession:
+        return findSession.put_into_dto(), 201
+    else:
+        return jsonify({'error': 'Could not found item'}), 500
+
 #-------------------------- CREATE --------------------------------
 @sessions_bp.post('/create')
 def registration() -> Response:
     content = request.get_json()
 
-
-    d1 = datetime.now()
-    session = Session(
-        date=d1
+    dateNow = datetime.now()
+    newSession = Session(
+        date=dateNow
     )
     commands = content['commands']
+    print(commands)
     for cmd in commands:
         command = Commands(
         index=cmd['index'],
@@ -40,16 +55,21 @@ def registration() -> Response:
         duration=cmd.get('duration'),
         distance=cmd.get('distance')
         )
-        session.commands.append(command)
+        newSession.commands.append(command)
 
-    session_controller.create(session)
-    return make_response("Successfull created", HTTPStatus.CREATED)
+    session_controller.create(newSession)
+    if newSession:
+        return newSession.put_into_dto(), 201
+    else:
+        return jsonify({'error': 'Could not create item'}), 500
 
 #-------------------------- UPDATE --------------------------------
 @sessions_bp.put('/<int:id>')
 def update_session(id: int) -> Response:
     content = request.get_json()
-    session = Session(**content)
+
+    print(content)
+    session = content['session']
     session_controller.update(id, session)
     return make_response("Session updated", HTTPStatus.OK)
 
