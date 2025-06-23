@@ -77,3 +77,23 @@ def update_session(id: int) -> Response:
 def delete_session(id: int) -> Response:
     session_controller.delete(id)
     return make_response("Session deleted", HTTPStatus.OK)
+
+#-------------------------- active-session-id --------------------------------
+@sessions_bp.post('/active-session-id')
+def active() -> Response:
+    data = request.get_json()
+    active = data['id']
+    print(active)
+    return make_response("Successful send", HTTPStatus.OK)
+
+
+#-------------------------- active-session-id --------------------------------
+@sessions_bp.post('/check-connection')
+def checkConnection() -> Response:
+    
+    result = True
+    if (result):
+       
+        return jsonify({'connection': result})
+    else:
+        return make_response("Invalid connection", HTTPStatus.METHOD_NOT_ALLOWED)
