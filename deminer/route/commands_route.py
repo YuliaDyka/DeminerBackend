@@ -43,3 +43,13 @@ def update_commands(id: int) -> Response:
 def delete_commands(id: int) -> Response:
     commands_controller.delete(id)
     return make_response("Commands deleted", HTTPStatus.OK)
+
+#-------------------------- post json active command --------------------------------
+@commands_bp.post('/active-command')
+def jsonActiveCommand() -> Response:
+    data = request.get_json()
+
+    commands = data['activeCommand']
+    print(commands)
+    return make_response("Successful send", HTTPStatus.OK)
+    
