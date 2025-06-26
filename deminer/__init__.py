@@ -32,7 +32,7 @@ def create_app() -> Flask:
     CORS(app)
     socketio.init_app(app)
     app.config["SECRET_KEY"] = secrets.token_hex(16)
-    app.config[SQLALCHEMY_DATABASE_URI] = "mysql://platform:PL-31013107606@176.118.54.8:31606/platform"
+    app.config[SQLALCHEMY_DATABASE_URI] = "mysql://platform:PL-31013107606@localhost:3306/platform"
     app.json.sort_keys = False
 
     @app.route("/")

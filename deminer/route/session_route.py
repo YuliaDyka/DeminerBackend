@@ -7,9 +7,75 @@ from http import HTTPStatus
 from deminer.controller import session_controller
 from deminer.model.commands import Commands
 from deminer.model.session import Session
+from deminer.dbus.robo_car_service import RoboCar
 
 
+roboCar = RoboCar()
 
+class ActiveSession:
+    isConnected = False
+    isActive = False
+    sessionID = 0
+    cmdPosition = 0
+    commands: list = []
+    
+    @staticmethod
+    def onConnectionStatusChanged(isConnected: bool):
+        if not isConnected and sA.isConnected:
+            sA.isActive = False
+        sA.isConnected = isConnected
+    
+    @staticmethod
+    def onCmdFinished():
+        if sA.isLastCmd():
+            sA.stop()
+        else:
+            sA.cmdPosition += 1
+            sA.runNextCmd()
+    
+    @staticmethod
+    def runNextCmd():
+        if sA.isActive:
+            cmd = sA.commands[sA.cmdPosition]
+            roboCar.runCommand(cmd['speed'], cmd['angle'], cmd['duration'], sA.onCmdFinished) 
+    
+    @staticmethod
+    def stop():
+        sA.isActive = False
+        roboCar.stopCurrentCommand()
+        
+    @staticmethod
+    def reset():
+        sA.cmdPosition = 0
+        sA.commands = []
+        
+    @staticmethod
+    def activeCmd():
+        return sA.commands[sA.cmdPosition]
+
+    @staticmethod
+    def size():
+        return len(sA.commands)
+    
+    @staticmethod
+    def activeCmdIndex() -> int:
+        return sA.commands[sA.cmdPosition]['index']
+    
+    @staticmethod
+    def isLastCmd() -> bool:
+        return sA.cmdPosition == sA.size() - 1
+    
+    @staticmethod
+    def print():
+        print(f"====== Active session ID: {sA.sessionID} =======")
+        for i in range(sA.size() - 1):
+            cmd = sA.commands[i]    
+            print(f"--> #{i}\tIndex: {cmd['index']}\tSpeed: {cmd['speed']}\tAngle: {cmd['angle']}\tDuration: {cmd['duration']}")
+    
+    
+
+sA = ActiveSession
+roboCar.startDBus(sA.onConnectionStatusChanged)
 
 sessions_bp = Blueprint('sessions', __name__, url_prefix='/sessions')
 
@@ -80,20 +146,36 @@ def delete_session(id: int) -> Response:
 
 #-------------------------- active-session-id --------------------------------
 @sessions_bp.post('/active-session-id')
-def active() -> Response:
-    data = request.get_json()
-    active = data['id']
-    print(active)
+def activeSessionID() -> Response:
+    sA.sessionID = request.get_json()['id']     
+    sA.isActive = sA.sessionID != 0
+    
+    if sA.isActive:
+        sA.reset()
+        session = session_controller.find_by_id(sA.sessionID)
+        sA.commands = session['commands'] # type: ignore
+        sA.runNextCmd()
+    else:
+        sA.stop()   
+
     return make_response("Successful send", HTTPStatus.OK)
 
-
-#-------------------------- active-session-id --------------------------------
+#-------------------------- check-connection --------------------------------
 @sessions_bp.post('/check-connection')
 def checkConnection() -> Response:
-    
-    result = True
-    if (result):
-       
-        return jsonify({'connection': result})
-    else:
-        return make_response("Invalid connection", HTTPStatus.METHOD_NOT_ALLOWED)
+    result = roboCar.isConnected #sA.isConnected
+    return jsonify({'connection': result})
+ 
+#-------------------------- get-active-cmd --------------------------------    
+@sessions_bp.post('/get-active-cmd')
+def getActiveCmd() -> Response:        
+    return jsonify({'index': sA.activeCmdIndex(), 'isSessionActive': sA.isActive})
+
+#-------------------------- camera-position --------------------------------    
+@sessions_bp.post('/camera-position')
+def cameraPosition() -> Response:
+    action = request.get_json()['action']
+    dir = request.get_json()['dir']
+    print(f"==> Camera move <== Action: {action}, Direction: {dir}")
+    roboCar.cameraMove(action, dir)
+    return make_response("Successful send", HTTPStatus.OK)
